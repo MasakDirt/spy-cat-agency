@@ -1,20 +1,37 @@
+from django.core.exceptions import ValidationError
 from django.db import models
+
+from spy_agency.validators import validate_cat_breed
 
 
 class SpyCat(models.Model):
-    class Breed(models.TextChoices):
-        SIAMESE = "siamese"
-        PERSIAN = "persian"
-        MAIN_COON = "main_coon"
-        RAGDOLL = "ragdoll"
-
     name = models.CharField(max_length=100)
     years_of_experience = models.PositiveIntegerField()
-    breed = models.CharField(max_length=9, choices=Breed)
+    breed = models.CharField(max_length=100)
     salary = models.DecimalField(max_digits=7, decimal_places=2)
 
     def __str__(self) -> str:
         return self.name
+
+    def clean(self) -> None:
+        validate_cat_breed(self.breed, ValidationError)
+
+    def save(
+            self,
+            *args,
+            force_insert=False,
+            force_update=False,
+            using=None,
+            update_fields=None,
+    ):
+        self.full_clean()
+        return super().save(
+            *args,
+            force_insert=force_insert,
+            force_update=force_update,
+            using=using,
+            update_fields=update_fields,
+        )
 
 
 class Mission(models.Model):
