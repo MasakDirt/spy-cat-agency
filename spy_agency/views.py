@@ -3,6 +3,7 @@ from django.db.models import QuerySet
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
 
@@ -10,7 +11,8 @@ from spy_agency.models import SpyCat, Mission, Target
 from spy_agency.serializers import (
     SpyCatSerializer,
     MissionSerializer,
-    TargetSerializer, MissionListSerializer, MissionDetailSerializer,
+    MissionListSerializer,
+    MissionDetailSerializer,
     TargetUpdateSerializer,
 )
 
@@ -45,14 +47,14 @@ class MissionViewSet(
 
         if self.action == "list":
             serializer = MissionListSerializer
-        if self.action == "retrieve":
+        if self.action in ("retrieve", "assign_cat"):
             serializer = MissionDetailSerializer
         if self.action == "update_targets":
             serializer = TargetUpdateSerializer
 
         return serializer
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request: Request, *args, **kwargs) -> Response:
         instance = self.get_object()
         if instance.cat is not None:
             return Response(
@@ -62,7 +64,7 @@ class MissionViewSet(
         return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=["patch"])
-    def update_targets(self, request, pk=None):
+    def update_targets(self, request: Request, pk: int = None) -> Response:
         mission = self.get_object()
         targets_data = request.data.get("targets", [])
 
@@ -113,4 +115,18 @@ class MissionViewSet(
         return Response(
             updated_targets,
             status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=["post"])
+    def assign_cat(self, request: Request, pk: int = None) -> Response:
+        mission = self.get_object()
+        cat_id = request.data.get("cat_id")
+
+        cat = get_object_or_404(SpyCat, pk=cat_id)
+        mission.cat = cat
+        mission.save()
+
+        return Response(
+            MissionDetailSerializer(mission).data,
+            status=status.HTTP_201_CREATED
         )
