@@ -1,0 +1,121 @@
+[
+  {
+    "model": "spy_agency.spycat",
+    "pk": 1,
+    "fields": {
+      "name": "Cat1",
+      "years_of_experience": 3,
+      "breed": "siamese",
+      "salary": "3500.00"
+    }
+  },
+  {
+    "model": "spy_agency.spycat",
+    "pk": 2,
+    "fields": {
+      "name": "Cat2",
+      "years_of_experience": 10,
+      "breed": "ragdoll",
+      "salary": "9999.99"
+    }
+  },
+  {
+    "model": "spy_agency.spycat",
+    "pk": 3,
+    "fields": {
+      "name": "Cat2",
+      "years_of_experience": 1,
+      "breed": "main_coon",
+      "salary": "800.00"
+    }
+  },
+  {
+    "model": "spy_agency.spycat",
+    "pk": 5,
+    "fields": {
+      "name": "Cat400",
+      "years_of_experience": 1,
+      "breed": "American Wirehair",
+      "salary": "800.00"
+    }
+  },
+  {
+    "model": "spy_agency.mission",
+    "pk": 1,
+    "fields": {
+      "is_complete": false,
+      "cat": 1
+    }
+  },
+  {
+    "model": "spy_agency.mission",
+    "pk": 2,
+    "fields": {
+      "is_complete": false,
+      "cat": 3
+    }
+  },
+  {
+    "model": "spy_agency.mission",
+    "pk": 5,
+    "fields": {
+      "is_complete": false,
+      "cat": 2
+    }
+  },
+  {
+    "model": "spy_agency.target",
+    "pk": 1,
+    "fields": {
+      "name": "Target1",
+      "country": "Ukraine",
+      "notes": "Updated notes for target 1",
+      "is_complete": false,
+      "mission": 1
+    }
+  },
+  {
+    "model": "spy_agency.target",
+    "pk": 2,
+    "fields": {
+      "name": "Target2",
+      "country": "Poland",
+      "notes": "Some notes2",
+      "is_complete": true,
+      "mission": 2
+    }
+  },
+  {
+    "model": "spy_agency.target",
+    "pk": 3,
+    "fields": {
+      "name": "Target3",
+      "country": "Germany",
+      "notes": "Updated notes for target 3",
+      "is_complete": false,
+      "mission": 2
+    }
+  },
+  {
+    "model": "spy_agency.target",
+    "pk": 8,
+    "fields": {
+      "name": "Target2",
+      "country": "Poland",
+      "notes": "Some notes2",
+      "is_complete": true,
+      "mission": 5
+    }
+  },
+  {
+    "model": "spy_agency.target",
+    "pk": 9,
+    "fields": {
+      "name": "Target3",
+      "country": "Germany",
+      "notes": "",
+      "is_complete": false,
+      "mission": 5
+    }
+  }
+]
