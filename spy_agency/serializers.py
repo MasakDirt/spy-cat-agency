@@ -9,6 +9,12 @@ class SpyCatSerializer(serializers.ModelSerializer):
         model = SpyCat
         fields = ("id", "name", "years_of_experience", "breed", "salary")
 
+    def update(self, instance, validated_data):
+        if "salary" in validated_data:
+            instance.salary = validated_data["salary"]
+            instance.save()
+        return instance
+
 
 class TargetSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,3 +38,17 @@ class MissionSerializer(serializers.ModelSerializer):
                 Target.objects.create(mission=mission, **target_data)
 
         return mission
+
+
+class MissionListSerializer(serializers.ModelSerializer):
+    cat_name = serializers.CharField(source="cat.name")
+    cat_breed = serializers.CharField(source="cat.breed")
+    targets = TargetSerializer(many=True)
+
+    class Meta:
+        model = Mission
+        fields = ("id", "is_complete", "cat_name", "cat_breed", "targets")
+
+
+class MissionDetailSerializer(MissionSerializer):
+    cat = SpyCatSerializer()
