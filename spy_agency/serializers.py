@@ -1,13 +1,19 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from spy_agency.models import SpyCat, Target, Mission
+from spy_agency.validators import validate_cat_breed
 
 
 class SpyCatSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpyCat
         fields = ("id", "name", "years_of_experience", "breed", "salary")
+
+    def validate(self, attrs: dict) -> dict:
+        validate_cat_breed(attrs["breed"], ValidationError)
+        return attrs
 
     def update(self, instance, validated_data):
         if "salary" in validated_data:
