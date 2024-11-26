@@ -23,6 +23,13 @@ class TargetSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "mission")
 
 
+class TargetUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Target
+        fields = ("id", "notes", "is_complete")
+        read_only_fields = ('id',)
+
+
 class MissionSerializer(serializers.ModelSerializer):
     targets = TargetSerializer(many=True)
 

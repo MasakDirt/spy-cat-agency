@@ -1,5 +1,6 @@
+from django.db import transaction
 from django.db.models import QuerySet
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from spy_agency.serializers import (
     SpyCatSerializer,
     MissionSerializer,
     TargetSerializer, MissionListSerializer, MissionDetailSerializer,
+    TargetUpdateSerializer,
 )
 
 
@@ -18,7 +20,13 @@ class SpyCatViewSet(viewsets.ModelViewSet):
     serializer_class = SpyCatSerializer
 
 
-class MissionViewSet(viewsets.ModelViewSet):
+class MissionViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Mission.objects.all()
     serializer_class = MissionSerializer
 
@@ -39,6 +47,8 @@ class MissionViewSet(viewsets.ModelViewSet):
             serializer = MissionListSerializer
         if self.action == "retrieve":
             serializer = MissionDetailSerializer
+        if self.action == "update_targets":
+            serializer = TargetUpdateSerializer
 
         return serializer
 
@@ -51,22 +61,56 @@ class MissionViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
-    @action(detail=True, methods=['patch'])
-    def complete_target(self, request, pk=None):
+    @action(detail=True, methods=["patch"])
+    def update_targets(self, request, pk=None):
         mission = self.get_object()
-        target_id = request.data.get("target_id")
+        targets_data = request.data.get("targets", [])
 
-        target = get_object_or_404(Target, id=target_id)
-        if mission.complete or target.complete:
+        if not targets_data:
             return Response(
-                {"detail": "Cannot modify completed mission or target."},
+                {"detail": "No targets data provided."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        target.complete = True
-        target.save()
+        updated_targets = []
+        with transaction.atomic():
+            for target_data in targets_data:
+                target_id = target_data.get("id")
+                if not target_id:
+                    return Response(
+                        {"detail": "Target ID is required for each target."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-        serializer = TargetSerializer(target)
-        serializer.is_valid(raise_exception=True)
+                target = get_object_or_404(Target, id=target_id)
+                if target.mission_id != mission.id:
+                    return Response(
+                        {
+                            "detail": f"Target ID {target_id} "
+                                      f"is not part of this mission."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-        return Response(serializer.data)
+                if mission.is_complete or target.is_complete:
+                    return Response(
+                        {
+                            "detail": f"Cannot modify completed target "
+                                      f"(ID {target_id}) or mission."
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                serializer = TargetUpdateSerializer(
+                    target,
+                    data=target_data,
+                    partial=True
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                updated_targets.append(serializer.data)
+
+        return Response(
+            updated_targets,
+            status=status.HTTP_200_OK
+        )
