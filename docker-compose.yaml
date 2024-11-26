@@ -1,4 +1,26 @@
 services:
+
+  spy_cat_agency:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "python manage.py migrate && python manage.py loaddata spy.json &&
+            python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
   postgres:
     image: postgres:17.0-alpine3.20
     restart: always
@@ -8,6 +30,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres:$PGDATA
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $POSTGRES_USER" ]
+      interval: 5s
+      retries: 5
 
 volumes:
   postgres:
